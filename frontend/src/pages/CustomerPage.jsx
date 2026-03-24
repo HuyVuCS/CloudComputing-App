@@ -5,6 +5,7 @@ import CustomerForm from "../components/CustomerForm";
 import CustomerList from "../components/CustomerList";
 import EmailForm from "../components/EmailForm";
 import SmsForm from "../components/SmsForm";
+import UserManagement from "../components/UserManagement";
 import {
   getCustomers,
   createCustomer,
@@ -192,27 +193,20 @@ function CustomerPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: "24px" }}>
-        <h2>Loading...</h2>
+      <div className="app-shell">
+        <div className="card">
+          <h2>Loading...</h2>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-          gap: "16px",
-          flexWrap: "wrap",
-        }}
-      >
+    <div className="app-shell">
+      <div className="page-header">
         <div>
-          <h1 style={{ margin: 0 }}>Customer Management</h1>
-          <p style={{ margin: "8px 0 0 0" }}>
+          <h1 className="page-title">Customer Management System</h1>
+          <p className="page-subtitle">
             Tenant ID: {currentTenantId ?? "-"} | Current User:{" "}
             {currentUser?.full_name ?? "-"} ({currentUser?.role ?? "-"})
           </p>
@@ -223,21 +217,42 @@ function CustomerPage() {
         </button>
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
+      <div className="top-grid">
         <CustomerForm
           onAdd={handleAdd}
           onUpdate={handleUpdate}
           editingCustomer={editingCustomer}
         />
+
+        <EmailForm
+          onSend={handleSendEmail}
+          selectedCount={selectedCustomers.length}
+        />
+
+        <SmsForm
+          onSend={handleSendSms}
+          selectedCount={selectedCustomers.length}
+        />
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
-        <button onClick={handleSelectAll}>Select All</button>{" "}
-        <button onClick={handleClearSelection}>Clear Selection</button>
-        <p>Selected customers: {selectedCustomers.length}</p>
+      <div className="toolbar">
+        <div className="toolbar-left">
+          <button className="btn btn-primary" onClick={handleSelectAll}>
+            Select All
+          </button>
+          <button className="btn btn-secondary" onClick={handleClearSelection}>
+            Clear Selection
+          </button>
+        </div>
+
+        <div className="toolbar-right">
+          <div className="badge">
+            Selected customers: {selectedCustomers.length}
+          </div>
+        </div>
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
+      <div className="card">
         <CustomerList
           customers={customers}
           onDelete={handleDelete}
@@ -247,19 +262,10 @@ function CustomerPage() {
         />
       </div>
 
-      <div style={{ marginBottom: "24px" }}>
-        <EmailForm
-          onSend={handleSendEmail}
-          selectedCount={selectedCustomers.length}
-        />
-      </div>
-
-      <div style={{ marginBottom: "24px" }}>
-        <SmsForm
-          onSend={handleSendSms}
-          selectedCount={selectedCustomers.length}
-        />
-      </div>
+      <UserManagement
+        currentUser={currentUser}
+        currentTenantId={currentTenantId}
+      />
     </div>
   );
 }

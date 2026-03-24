@@ -1,51 +1,95 @@
 import { useEffect, useState } from "react";
-import { validateSetupToken, setupPassword } from "../services/api";
+import { setupPassword, validateSetupToken } from "../services/api";
 
 function SetupPasswordPage() {
   const [tokenStatus, setTokenStatus] = useState("loading");
   const [token, setToken] = useState("");
   const [userInfo, setUserInfo] = useState(null);
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenValue = params.get("token");
+    const init = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tokenValue = params.get("token");
 
-    if (!tokenValue) {
-      setTokenStatus("invalid");
-      return;
-    }
+        if (!tokenValue) {
+          setTokenStatus("invalid");
+          return;
+        }
 
-    setToken(tokenValue);
+        setToken(tokenValue);
 
-    validateSetupToken(tokenValue).then((result) => {
-      if (result.user) {
-        setUserInfo(result.user);
-        setTokenStatus("valid");
-      } else {
+        const result = await validateSetupToken(tokenValue);
+
+        if (result?.user) {
+          setUserInfo(result.user);
+          setTokenStatus("valid");
+        } else {
+          setTokenStatus("invalid");
+        }
+      } catch (err) {
+        console.error("Validate setup token error:", err);
         setTokenStatus("invalid");
       }
-    });
+    };
+
+    init();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await setupPassword({ token, password });
+    if (!password || !confirmPassword) {
+      alert("Please fill in all password fields");
+      return;
+    }
 
-    if (result.message) {
-      alert("Password has been set successfully. Please login.");
-      window.location.href = "/";
-    } else {
-      alert(result.error || "Failed to set password");
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const result = await setupPassword({
+        token,
+        password,
+      });
+
+      if (result?.message) {
+        alert("Password has been set successfully. Please login.");
+        window.location.href = "/";
+        return;
+      }
+
+      alert(result?.error || "Failed to set password");
+    } catch (err) {
+      console.error("Setup password error:", err);
+      alert("Failed to set password");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (tokenStatus === "loading") {
     return (
-      <div className="app-shell" style={{ maxWidth: "520px" }}>
-        <div className="card">
-          <h3>Validating token...</h3>
+      <div className="auth-shell">
+        <div className="auth-card">
+          <h2 className="auth-title" style={{ marginBottom: 8 }}>
+            Validating setup link...
+          </h2>
+          <p className="auth-subtitle">
+            Please wait while we verify your account invitation.
+          </p>
         </div>
       </div>
     );
@@ -53,21 +97,52 @@ function SetupPasswordPage() {
 
   if (tokenStatus === "invalid") {
     return (
-      <div className="app-shell" style={{ maxWidth: "520px" }}>
-        <div className="card">
-          <h3>Invalid or expired setup link</h3>
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <div className="auth-brand-badge">!</div>
+            <div>
+              <h1 className="auth-title">Invalid or Expired Link</h1>
+              <p className="auth-subtitle">
+                This password setup link is no longer valid. Please contact your
+                tenant administrator to request a new invitation.
+              </p>
+            </div>
+          </div>
+
+          <div className="button-row" style={{ marginTop: 16 }}>
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app-shell" style={{ maxWidth: "520px" }}>
-      <div className="card">
-        <h3>Set Your Password</h3>
-        <p className="helper">
-          Welcome {userInfo?.full_name} ({userInfo?.email})
-        </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-brand-badge">PW</div>
+          <div>
+            <h1 className="auth-title">Set Your Password</h1>
+            <p className="auth-subtitle">
+              Welcome{" "}
+              <strong>
+                {userInfo?.full_name || "User"}
+              </strong>
+              {" • "}
+              {userInfo?.email || ""}
+            </p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -77,13 +152,41 @@ function SetupPasswordPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your new password"
+              placeholder="Enter new password"
+              required
             />
           </div>
 
-          <div className="button-row">
-            <button className="btn btn-primary" type="submit">
-              Set Password
+          <div className="form-group">
+            <label className="label">Confirm Password</label>
+            <input
+              className="input"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password"
+              required
+            />
+          </div>
+
+          <div className="button-row" style={{ marginTop: 16 }}>
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : "Set Password"}
+            </button>
+
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              disabled={submitting}
+            >
+              Back
             </button>
           </div>
         </form>

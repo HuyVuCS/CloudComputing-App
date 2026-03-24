@@ -3,6 +3,7 @@ import { login, register } from "../services/api";
 
 function AuthPage({ onAuthSuccess }) {
   const [mode, setMode] = useState("login");
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     tenant_name: "",
     full_name: "",
@@ -18,59 +19,107 @@ function AuthPage({ onAuthSuccess }) {
     }));
   };
 
+  const resetForm = () => {
+    setForm({
+      tenant_name: "",
+      full_name: "",
+      email: "",
+      password: "",
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let result;
-    if (mode === "register") {
-      result = await register(form);
-    } else {
-      result = await login({
-        email: form.email,
-        password: form.password,
-      });
-    }
+    try {
+      setSubmitting(true);
 
-    if (result.token) {
-      localStorage.setItem("token", result.token);
-      onAuthSuccess();
-    } else {
-      alert(result.error || "Authentication failed");
+      let result;
+      if (mode === "register") {
+        result = await register(form);
+      } else {
+        result = await login({
+          email: form.email,
+          password: form.password,
+        });
+      }
+
+      if (result?.token) {
+        localStorage.setItem("token", result.token);
+        onAuthSuccess();
+        return;
+      }
+
+      alert(result?.error || "Authentication failed");
+    } catch (err) {
+      console.error("Auth error:", err);
+      alert("Authentication failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const switchMode = () => {
+    setMode((prev) => (prev === "login" ? "register" : "login"));
+    resetForm();
+  };
+
   return (
-    <div className="app-shell" style={{ maxWidth: "520px" }}>
-      <div className="card">
-        <h3>{mode === "login" ? "Login" : "Register Tenant Admin"}</h3>
-        <p className="helper">
-          {mode === "login"
-            ? "Login to access your tenant workspace."
-            : "Create a new tenant and an admin account."}
-        </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-brand-badge">CMS</div>
+          <div>
+            <h1 className="auth-title">Customer Management System</h1>
+            <p className="auth-subtitle">
+              {mode === "login"
+                ? "Sign in to access your tenant workspace."
+                : "Create a new tenant and admin account."}
+            </p>
+          </div>
+        </div>
+
+        <div className="auth-tabs">
+          <button
+            type="button"
+            className={`auth-tab ${mode === "login" ? "active" : ""}`}
+            onClick={() => setMode("login")}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            className={`auth-tab ${mode === "register" ? "active" : ""}`}
+            onClick={() => setMode("register")}
+          >
+            Register
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {mode === "register" && (
             <>
               <div className="form-group">
-                <label className="label">Tenant Name</label>
+                <label className="label">Tenant / Company Name</label>
                 <input
                   className="input"
                   name="tenant_name"
                   value={form.tenant_name}
                   onChange={handleChange}
-                  placeholder="Enter tenant/company name"
+                  placeholder="Enter tenant or company name"
+                  required
                 />
               </div>
 
               <div className="form-group">
-                <label className="label">Full Name</label>
+                <label className="label">Admin Full Name</label>
                 <input
                   className="input"
                   name="full_name"
                   value={form.full_name}
                   onChange={handleChange}
                   placeholder="Enter admin full name"
+                  required
                 />
               </div>
             </>
@@ -80,10 +129,12 @@ function AuthPage({ onAuthSuccess }) {
             <label className="label">Email</label>
             <input
               className="input"
+              type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               placeholder="Enter email"
+              required
             />
           </div>
 
@@ -95,24 +146,54 @@ function AuthPage({ onAuthSuccess }) {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="Enter password"
+              placeholder={
+                mode === "login" ? "Enter your password" : "Create a password"
+              }
+              required
             />
           </div>
 
-          <div className="button-row">
-            <button className="btn btn-primary" type="submit">
-              {mode === "login" ? "Login" : "Register"}
+          <div className="button-row" style={{ marginTop: 16 }}>
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting
+                ? "Please wait..."
+                : mode === "login"
+                ? "Login"
+                : "Register"}
             </button>
 
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
+              onClick={switchMode}
+              disabled={submitting}
             >
-              {mode === "login" ? "Switch to Register" : "Switch to Login"}
+              {mode === "login" ? "Create new tenant" : "Back to login"}
             </button>
           </div>
         </form>
+
+        <div className="auth-footer">
+          {mode === "login" ? (
+            <p>
+              Need a new workspace?{" "}
+              <button type="button" className="auth-link-btn" onClick={switchMode}>
+                Register tenant admin
+              </button>
+            </p>
+          ) : (
+            <p>
+              Already have an account?{" "}
+              <button type="button" className="auth-link-btn" onClick={switchMode}>
+                Login here
+              </button>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
