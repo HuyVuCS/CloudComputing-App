@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AuthPage from "../components/AuthPage";
+import SetupPasswordPage from "../components/SetupPasswordPage";
 import CustomerForm from "../components/CustomerForm";
 import CustomerList from "../components/CustomerList";
 import EmailForm from "../components/EmailForm";
@@ -13,6 +15,7 @@ import {
 } from "../services/api";
 
 function CustomerPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
   const [customers, setCustomers] = useState([]);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -28,8 +31,18 @@ function CustomerPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated) {
+      fetchContext();
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    setCustomers([]);
+    setSelectedCustomers([]);
+  };
 
   const handleAdd = async (form) => {
     try {
@@ -102,9 +115,18 @@ function CustomerPage() {
     }
   };
 
+  if (window.location.pathname === "/setup-password") {
+    return <SetupPasswordPage />;
+  }
+  
+  if (!isAuthenticated) {
+    return <AuthPage onAuthSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: "10px 20px" }}>
       <h1>Customer Management</h1>
+      <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
 
       <CustomerForm
         onAdd={handleAdd}
@@ -135,7 +157,6 @@ function CustomerPage() {
         onSend={handleSendSms}
         selectedCount={selectedCustomers.length}
       />
-
     </div>
   );
 }
