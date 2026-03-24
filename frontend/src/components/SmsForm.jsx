@@ -1,30 +1,42 @@
 import { useState } from "react";
 
-function SmsForm({ onSend = () => {}, selectedCount = 0 }) {
+function SmsForm({ onSend, selectedCount }) {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!message.trim()) {
+      alert("Please enter SMS message");
+      return;
+    }
+
     onSend({ message });
-    setMessage("");
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: "30px" }}>
+    <div className="card form-card">
       <h3>Send SMS</h3>
-      <p>Selected customers: {selectedCount}</p>
+      <p className="helper">Selected customers: {selectedCount}</p>
 
-      <textarea
-        placeholder="SMS Message"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        rows="4"
-        cols="50"
-      />
-      <br />
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="label">SMS Message</label>
+          <textarea
+            className="input"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Enter SMS message"
+          />
+        </div>
 
-      <button type="submit">Send SMS</button>
-    </form>
+        <div className="button-row">
+          <button className="btn btn-primary" type="submit">
+            Send SMS
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 

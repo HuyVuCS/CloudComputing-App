@@ -1,40 +1,66 @@
 import { useState } from "react";
 
-function EmailForm({ onSend = () => {}, selectedCount = 0 }) {
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
+function EmailForm({ onSend, selectedCount }) {
+  const [form, setForm] = useState({
+    subject: "",
+    message: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSend({ subject, message });
-    setSubject("");
-    setMessage("");
+
+    if (!form.subject.trim() || !form.message.trim()) {
+      alert("Please enter both subject and message");
+      return;
+    }
+
+    onSend(form);
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: "30px" }}>
+    <div className="card form-card">
       <h3>Send Email</h3>
-      <p>Selected customers: {selectedCount}</p>
+      <p className="helper">Selected customers: {selectedCount}</p>
 
-      <input
-        type="text"
-        placeholder="Email Subject"
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-      />
-      <br />
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="label">Email Subject</label>
+          <input
+            className="input"
+            type="text"
+            name="subject"
+            value={form.subject}
+            onChange={handleChange}
+            placeholder="Enter email subject"
+          />
+        </div>
 
-      <textarea
-        placeholder="Email Message"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        rows="5"
-        cols="50"
-      />
-      <br />
+        <div className="form-group">
+          <label className="label">Email Message</label>
+          <textarea
+            className="input"
+            name="message"
+            value={form.message}
+            onChange={handleChange}
+            placeholder="Enter email message"
+          />
+        </div>
 
-      <button type="submit">Send Email</button>
-    </form>
+        <div className="button-row">
+          <button className="btn btn-primary" type="submit">
+            Send Email
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 

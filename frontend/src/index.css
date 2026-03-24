@@ -326,3 +326,24 @@ th {
 .auth-link-btn:hover {
   text-decoration: underline;
 }
+
+.form-card {
+  min-height: 100%;
+}
+
+.top-grid > .card {
+  height: 100%;
+}
+
+.top-grid textarea.input {
+  min-height: 120px;
+}
+
+.top-grid .button-row {
+  margin-top: 12px;
+}
+
+table .button-row .btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+}

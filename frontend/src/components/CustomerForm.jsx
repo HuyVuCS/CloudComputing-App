@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-function CustomerForm({ onAdd = () => {}, onUpdate = () => {}, editingCustomer = null }) {
+function CustomerForm({ onAdd, onUpdate, editingCustomer }) {
   const [form, setForm] = useState({
     full_name: "",
     address: "",
@@ -34,15 +34,7 @@ function CustomerForm({ onAdd = () => {}, onUpdate = () => {}, editingCustomer =
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (editingCustomer) {
-      onUpdate(editingCustomer.id, form);
-    } else {
-      onAdd(form);
-    }
-
+  const resetForm = () => {
     setForm({
       full_name: "",
       address: "",
@@ -51,46 +43,101 @@ function CustomerForm({ onAdd = () => {}, onUpdate = () => {}, editingCustomer =
     });
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (
+      !form.full_name.trim() ||
+      !form.address.trim() ||
+      !form.phone_number.trim() ||
+      !form.email.trim()
+    ) {
+      alert("Please fill in all customer fields");
+      return;
+    }
+
+    if (editingCustomer) {
+      onUpdate(editingCustomer.id, form);
+    } else {
+      onAdd(form);
+    }
+
+    resetForm();
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>{editingCustomer ? "Edit Customer" : "Add Customer"}</h3>
+    <div className="card form-card">
+      <h3>{editingCustomer ? "Update Customer" : "Add Customer"}</h3>
+      <p className="helper">
+        {editingCustomer
+          ? "Edit the selected customer information."
+          : "Create a new customer record in your tenant workspace."}
+      </p>
 
-      <input
-        name="full_name"
-        placeholder="Full Name"
-        value={form.full_name}
-        onChange={handleChange}
-      />
-      <br />
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="label">Full Name</label>
+          <input
+            className="input"
+            type="text"
+            name="full_name"
+            value={form.full_name}
+            onChange={handleChange}
+            placeholder="Enter customer full name"
+          />
+        </div>
 
-      <input
-        name="address"
-        placeholder="Address"
-        value={form.address}
-        onChange={handleChange}
-      />
-      <br />
+        <div className="form-group">
+          <label className="label">Address</label>
+          <input
+            className="input"
+            type="text"
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Enter address"
+          />
+        </div>
 
-      <input
-        name="phone_number"
-        placeholder="Phone"
-        value={form.phone_number}
-        onChange={handleChange}
-      />
-      <br />
+        <div className="form-group">
+          <label className="label">Phone</label>
+          <input
+            className="input"
+            type="text"
+            name="phone_number"
+            value={form.phone_number}
+            onChange={handleChange}
+            placeholder="Enter phone number"
+          />
+        </div>
 
-      <input
-        name="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={handleChange}
-      />
-      <br />
+        <div className="form-group">
+          <label className="label">Email</label>
+          <input
+            className="input"
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Enter email"
+          />
+        </div>
 
-      <button type="submit">
-        {editingCustomer ? "Update" : "Add"}
-      </button>
-    </form>
+        <div className="button-row">
+          <button className="btn btn-primary" type="submit">
+            {editingCustomer ? "Update Customer" : "Add Customer"}
+          </button>
+
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={resetForm}
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
